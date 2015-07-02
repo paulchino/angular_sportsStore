@@ -1,0 +1,105 @@
+<html ng-app="todoApp">
+<head>
+	<title>To Do List</title>
+	<link rel="stylesheet" type="text/css" href="bootstrap.css">
+	<link rel="stylesheet" type="text/css" href="bootstrap-theme.css">
+	<script type="text/javascript" src="angular.min.js"></script>
+</head>
+	<script type="text/javascript">
+		var model = {
+			user: "Paul"
+			// items: [
+			// 		{ action: "Buy Flowers", done: false},
+			// 		{ action: "Get Shoes", done: false},
+			// 		{ action: "Collect Tickets", done: true},
+			// 		{ action: "Call Jose", done: false}
+			// ]
+		};
+
+		angular.module("todoApp", [])
+		.run(function($http) {
+			$http.get("todo.json").success(function(data) {
+				//console.log(data);
+				model.items = data;
+				console.log(model);
+			})
+		})
+		.controller("ToDoCtrl", function($scope) {
+			$scope.todo = model;
+
+			$scope.incompleteCount = function() {
+				var count = 0;
+				angular.forEach($scope.todo.items, function(item) {
+					if (!item.done) { count++ }
+				});
+				// for (var i = 0; i < $scope.todo.items.length; i++) {
+				// 	if (!$scope.todo.items[i].done) {
+				// 		count++;
+				// 	}
+				// }
+				return count
+			}
+
+			$scope.warningLevel = function() {
+				return $scope.incompleteCount() < 3 ? "label-success" : "label-warning";
+			}
+
+			$scope.addNewItem = function(actionText) {
+				$scope.todo.items.push({ action: actionText, done: false });
+			}
+		})
+		.filter("checkedItems",function() {
+			return function (items, showComplete) {
+				var resultArr = [];
+				angular.forEach(items, function(item) {
+					if (item.done == false || showComplete == true) {
+						resultArr.push(item);
+					}
+				});
+				return resultArr
+			}
+		})
+
+
+
+	</script>
+<body ng-controller="ToDoCtrl">
+	<div class="page-header">
+		<h1>{{todo.user}} to do list</h1>
+		<span class="label label-default" ng-hide="incompleteCount() ==0" ng-class="warningLevel()">{{incompleteCount()}}</span>
+	</div>
+	<div class="panel">
+		<div class="input-group">
+			<input class="form-control" ng-model="actionText" />
+			<span class="input-group-btn">
+				<button class="btn btn-default" ng-click="addNewItem(actionText)">Add</button>
+			</span>
+		</div>
+		<table class="table table-striped">
+			<thead>
+				<tr>
+					<th>Description</th>
+					<th>Done</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr ng-repeat="item in todo.items | checkedItems:showComplete | orderBy: 'action'" >
+					<td>{{item.action}}</td>
+					<td><input type="checkbox" ng-model="item.done" /></td>
+
+					<td>{{item.done}}</td>
+				</tr>
+<!-- 				<tr><td>Buy Flowers</td><td>No</td></tr>
+				<tr><td>Get Shoes</td><td>No</td></tr>
+				<tr><td>Collect Tickets</td><td>Yes</td></tr>
+				<tr><td>Call Michelle</td><td>No</td></tr> -->
+			</tbody>
+		</table>
+		<div class="checkbox-inline">
+			<label><input type="checkbox" ng-model="showComplete"/>Show Complete</label>
+		</div>
+	</div>
+
+
+</body>
+</html>
